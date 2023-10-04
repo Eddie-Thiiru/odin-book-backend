@@ -5,7 +5,7 @@ const Post = require("../models/post");
 const Comment = require("../models/comment");
 
 // Display list of all posts
-exports.post_list = asyncHandler(async (req, res, next) => {
+exports.index = asyncHandler(async (req, res, next) => {
   const allPosts = await Post.find()
     .populate("author")
     .populate("comments")

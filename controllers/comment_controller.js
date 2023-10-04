@@ -4,13 +4,6 @@ const { body, validationResult } = require("express-validator");
 const Post = require("../models/post");
 const Comment = require("../models/comment");
 
-// // Display post comments
-// exports.comment_list = asyncHandler(async (req, res, next) => {
-//   const allPostComments = await Comment.find({ post: req.params.id }).exec();
-
-//   res.send(allPostComments);
-// });
-
 // Handle comment create
 exports.comment_create = [
   body("text")
