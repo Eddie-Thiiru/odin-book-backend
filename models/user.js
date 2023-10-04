@@ -8,8 +8,8 @@ const UserSchema = new Schema({
   email: { type: String, required: true },
   profilePicture: { type: Buffer },
   bio: { type: String, maxLength: 100 },
-  friends: [{ types: Schema.Types.ObjectId, ref: "User" }],
-  friendRequests: [{ types: Schema.Types.ObjectId, ref: "User" }],
+  friends: [{ type: Schema.Types.ObjectId, ref: "User" }],
+  friendRequests: [{ type: Schema.Types.ObjectId, ref: "User" }],
   password: { type: String, required: true, minLength: 8 },
 });
 
