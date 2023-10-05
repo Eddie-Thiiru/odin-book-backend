@@ -41,7 +41,7 @@ exports.comment_create = [
 exports.comment_delete = asyncHandler(async (req, res, next) => {
   console.log(req.params);
 
-  // const comment = await Comment.findById(req.params.id).exec();
+  // const comment = await Comment.find(req.params.id).exec();
   // if (comment) {
   //   await comment.findByIdAndDelete(req.params.id);
   // }

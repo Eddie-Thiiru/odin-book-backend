@@ -37,7 +37,7 @@ exports.user_update_bio = [
       res.send(422).json({ errors: errors.array()[0].msg });
       return;
     } else {
-      const user = User.findByIdAndUpdate(
+      const user = await User.findByIdAndUpdate(
         req.params.id,
         { $set: { bio: bio } },
         {}

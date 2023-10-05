@@ -12,13 +12,13 @@ router.get("/", post_controller.index);
 /// USER ROUTES ///
 
 // GET request for user details
-router.get("/:name", user_controller.user_detail);
+router.get("/profile/:id", user_controller.user_detail);
 
 // POST request for user photo
-router.post("/name/photo", user_controller.user_update_photo);
+router.post("/profile/:id/photo", user_controller.user_update_photo);
 
 // POST request for user bio
-router.post("/name/bio", user_controller.user_update_photo);
+router.post("/profile/:id/bio", user_controller.user_update_photo);
 
 /// POSTS ROUTES ///
 
