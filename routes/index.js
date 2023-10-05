@@ -11,6 +11,12 @@ router.get("/", post_controller.index);
 
 /// USER ROUTES ///
 
+// POST request for user login
+router.post("/login", user_controller.user_login);
+
+// POST request for user sign in
+router.post("/signup", user_controller.user_signup);
+
 // GET request for user details
 router.get("/profile/:id", user_controller.user_detail);
 
