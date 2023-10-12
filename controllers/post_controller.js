@@ -6,9 +6,10 @@ const Comment = require("../models/comment");
 
 // Display list of all posts
 exports.index = asyncHandler(async (req, res, next) => {
-  const allPosts = await Post.find()
-    .populate("author")
-    .populate("comments")
+  const allPosts = await Post.find({}, "author text likes comments timestamp")
+    .populate("author", "firstName lastName")
+    .populate("comments", " author text timestamp")
+    .sort({ timestamp: 1 })
     .exec();
 
   res.send(allPosts);

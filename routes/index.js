@@ -11,6 +11,9 @@ router.get("/", post_controller.index);
 
 /// USER ROUTES ///
 
+// GET request for use auth
+router.get("/isUserAuth", user_controller.user_auth);
+
 // POST request for user login
 router.post("/login", user_controller.user_login);
 

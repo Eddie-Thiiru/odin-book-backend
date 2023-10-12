@@ -1,9 +1,56 @@
+const passport = require("passport");
+const jwt = require("jsonwebtoken");
 const asyncHandler = require("express-async-handler");
 const { body, validationResult } = require("express-validator");
-const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+require("dotenv/config");
 
 const User = require("../models/user");
+
+// Handle auth
+exports.user_auth = (req, res, next) => {
+  passport.authenticate("jwt", { session: false }, (err, user, info) => {
+    if (err || !user) {
+      return res.status(400).json({ message: info.message });
+    }
+
+    return res.status(200).json({ message: "Authenticated" });
+  })(req, res);
+};
+
+// Handle login
+exports.user_login = (req, res, next) => {
+  passport.authenticate("local", { session: false }, (err, user, info) => {
+    // custom callback provides custom error message in info
+    if (err || !user) {
+      return res.status(400).json({
+        message: info.message,
+      });
+    }
+
+    req.login(user, { session: false }, (err) => {
+      if (err) {
+        res.send(err);
+      }
+
+      // generate a signed web token with the contents of user object
+      const opts = {};
+      opts.expiresIn = "2h";
+      const secret = process.env.SECRET_KEY;
+      const token = jwt.sign({ user }, secret, opts);
+
+      return res.status(200).json({
+        message: "success",
+        token: token,
+        user: {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          id: user._id,
+        },
+      });
+    });
+  })(req, res);
+};
 
 // Handle signup
 exports.user_signup = [
@@ -38,19 +85,23 @@ exports.user_signup = [
         throw new Error("Email already in use");
       }
     }),
+  body("password", "Password must have a minimum of 8 characters")
+    .trim()
+    .isLength({ min: 8 })
+    .escape(),
 
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
     const user = new User({
       firstName: req.body.firstName,
-      secondName: req.body.secondName,
+      lastName: req.body.lastName,
       email: req.body.email,
       password: req.body.password,
     });
 
     if (!errors.isEmpty()) {
-      res.status(422).json({ errors: errors.array()[0] });
+      res.status(422).json({ errors: errors.array() });
       return;
     } else {
       bcrypt.hash(req.body.password, 10, async (err, hashedPassword) => {
@@ -59,7 +110,21 @@ exports.user_signup = [
 
           await user.save();
 
-          res.send(user);
+          // generate a signed web token with the contents of user object
+          const opts = {};
+          opts.expiresIn = "2h";
+          const secret = process.env.SECRET_KEY;
+          const token = jwt.sign({ user }, secret, opts);
+
+          return res.status(200).json({
+            message: "success",
+            token: token,
+            user: {
+              firstName: user.firstName,
+              lastName: user.lastName,
+              id: user._id,
+            },
+          });
         } catch (err) {
           return next(err);
         }
