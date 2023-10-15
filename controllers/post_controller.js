@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const { body, validationResult } = require("express-validator");
 
+const User = require("../models/user");
 const Post = require("../models/post");
 const Comment = require("../models/comment");
 
@@ -8,11 +9,23 @@ const Comment = require("../models/comment");
 exports.index = asyncHandler(async (req, res, next) => {
   const allPosts = await Post.find({}, "author text likes comments timestamp")
     .populate("author", "firstName lastName")
-    .populate("comments", " author text timestamp")
-    .sort({ timestamp: 1 })
+    .sort({ timestamp: -1 })
     .exec();
 
   res.send(allPosts);
+});
+
+// Handle post comments fetch
+exports.post_comments = asyncHandler(async (req, res, next) => {
+  const allComments = await Comment.find(
+    { post: req.params.id },
+    "author post text timestamp"
+  )
+    .populate({ path: "author", select: "firstName lastName" })
+    .sort({ timestamp: -1 })
+    .exec();
+
+  res.send(allComments);
 });
 
 // Handle post create
@@ -30,7 +43,7 @@ exports.create_post = [
     const errors = validationResult(req);
 
     const post = new Post({
-      author: req.user._id,
+      author: req.body.userId,
       text: req.body.text,
       timestamp: new Date(),
     });
@@ -47,18 +60,14 @@ exports.create_post = [
 ];
 
 // Handle update
-exports.update_post_likes = asyncHandler(async (req, res, next) => {
-  const post = await Post.findById(req.params.id).exec();
+exports.create_post_like = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.body.userId).exec();
 
-  const newLikes = post.likes + 1;
+  await Post.findByIdAndUpdate(req.params.id, {
+    $push: { likes: user },
+  });
 
-  await post.findByIdAndUpdate(
-    req.params.id,
-    { $set: { likes: newLikes } },
-    {}
-  );
-
-  res.send(post);
+  res.status(200).json({ message: "success" });
 });
 
 // Handle delete
