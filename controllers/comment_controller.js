@@ -11,28 +11,39 @@ exports.comment_create = [
     .isLength({ min: 1 })
     .escape()
     .withMessage("Comment must not be empty")
-    .isLength({ max: 3000 })
+    .isLength({ max: 1000 })
     .escape()
     .withMessage("Comment should not exceed 1000 characters"),
 
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
-    console.log(req.params);
-
     const comment = new Comment({
-      author: req.user._id,
+      author: req.body.userId,
       text: req.body.text,
-      // post: "",
+      post: req.params.id,
       timestamp: new Date(),
     });
 
     if (!errors.isEmpty()) {
       res.status(422).json({ errors: errors.array()[0].msg });
     } else {
+      // Add comment to db and update parent post
       await comment.save();
+      await Post.findByIdAndUpdate(req.params.id, {
+        $push: { comments: comment },
+      });
 
-      res.send(comment);
+      // Fetch all comments after save
+      const allComments = await Comment.find(
+        { post: req.params.id },
+        "author post text timestamp"
+      )
+        .populate({ path: "author", select: "firstName lastName" })
+        .sort({ timestamp: -1 })
+        .exec();
+
+      res.send(allComments);
     }
   }),
 ];
