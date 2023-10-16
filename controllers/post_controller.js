@@ -59,7 +59,7 @@ exports.create_post = [
   }),
 ];
 
-// Handle update
+// Handle likes update
 exports.create_post_like = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.body.userId).exec();
 
@@ -70,20 +70,20 @@ exports.create_post_like = asyncHandler(async (req, res, next) => {
   res.status(200).json({ message: "success" });
 });
 
+// Handle likes delete
+exports.delete_post_like = asyncHandler(async (req, res, next) => {
+  await Post.findByIdAndUpdate(req.params.postId, {
+    $pull: { likes: req.params.likeId },
+  });
+
+  res.status(200).json({ message: "success" });
+});
+
 // Handle delete
 exports.delete_post = asyncHandler(async (req, res, next) => {
-  const [post, allPostComments] = await Promise.all([
-    Post.findById(req.params.id).exec(),
-    Comment.find({ post: req.params.id }).exec(),
-  ]);
+  await Post.findByIdAndDelete(req.params.id);
 
-  if (post) {
-    await post.findByIdAndDelete(req.params.id);
+  await Comment.deleteMany({ post: req.params.id });
 
-    if (allPostComments) {
-      await allPostComments.deleteMany({ post: req.params.id });
-    }
-
-    res.send(post);
-  }
+  res.status(200).json({ message: "success" });
 });

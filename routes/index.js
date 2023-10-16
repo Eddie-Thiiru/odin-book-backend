@@ -37,17 +37,23 @@ router.get("/post/:id/comments", post_controller.post_comments);
 router.post("/post", post_controller.create_post);
 
 // POST request for post likes
-router.post("/post/:id/like", post_controller.create_post_like);
+router.post("/post/:id/likes", post_controller.create_post_like);
+
+// DELETE request for post likes
+router.delete("/post/:postId/likes/:likeId", post_controller.delete_post_like);
 
 // DELETE request for post
-router.delete("/post", post_controller.delete_post);
+router.delete("/post/:id", post_controller.delete_post);
 
 /// COMMENT ROUTES ///
 
 // POST request for new comment
-router.post("/post/:id/comment", comment_controller.comment_create);
+router.post("/post/:id/comments", comment_controller.comment_create);
 
 // DELETE request for comment
-router.delete("/comment", comment_controller.comment_delete);
+router.delete(
+  "/post/:postId/comments/:userId",
+  comment_controller.comment_delete
+);
 
 module.exports = router;

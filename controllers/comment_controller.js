@@ -50,10 +50,20 @@ exports.comment_create = [
 
 // Handle comment delete
 exports.comment_delete = asyncHandler(async (req, res, next) => {
-  console.log(req.params);
+  const comment = await Comment.findOneAndDelete({ author: req.params.userId });
 
-  // const comment = await Comment.find(req.params.id).exec();
-  // if (comment) {
-  //   await comment.findByIdAndDelete(req.params.id);
-  // }
+  await Post.findByIdAndUpdate(req.params.postId, {
+    $pull: { comments: comment._id },
+  });
+
+  // Fetch all comments after save
+  const allComments = await Comment.find(
+    { post: req.params.postId },
+    "author post text timestamp"
+  )
+    .populate({ path: "author", select: "firstName lastName" })
+    .sort({ timestamp: -1 })
+    .exec();
+
+  res.send(allComments);
 });
