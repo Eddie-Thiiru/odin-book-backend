@@ -19,11 +19,44 @@ router.post("/signup", user_controller.user_signup);
 // GET request for user details
 router.get("/profile/:id", user_controller.user_detail);
 
+// GET request for friend requests
+router.get("/profile/:id/requests", user_controller.user_requests);
+
+// GET request for friend suggestions
+router.get("/profile/:id/suggestions", user_controller.user_suggestions);
+
+// GET request for user friends
+router.get("/profile/:id/friends", user_controller.user_friends);
+
+// GET request for user posts
+router.get("/profile/:id/posts", user_controller.user_posts);
+
 // POST request for user photo
 router.post("/profile/:id/photo", user_controller.user_update_photo);
 
 // POST request for user bio
-router.post("/profile/:id/bio", user_controller.user_update_photo);
+router.post("/profile/:id/bio", user_controller.user_update_bio);
+
+// PUT request to send friend requests
+router.put(
+  "/profile/:userId/requests/:requestId",
+  user_controller.add_requests
+);
+
+// PUT request to accept friends requests
+router.put("/profile/:userId/friends/:requestId", user_controller.add_friends);
+
+// DELETE request to unfriend a user
+router.delete(
+  "/profile/:userId/friends/:requestId",
+  user_controller.delete_friends
+);
+
+// DELETE request to remove friend requests
+router.delete(
+  "/profile/:userId/requests/:requestId",
+  user_controller.delete_friend_requests
+);
 
 /// POSTS ROUTES ///
 

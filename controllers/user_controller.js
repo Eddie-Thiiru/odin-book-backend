@@ -6,6 +6,7 @@ const bcrypt = require("bcryptjs");
 require("dotenv/config");
 
 const User = require("../models/user");
+const Post = require("../models/post");
 
 // Handle auth
 exports.user_auth = (req, res, next) => {
@@ -17,6 +18,119 @@ exports.user_auth = (req, res, next) => {
     return res.status(200).json({ message: "Authenticated" });
   })(req, res);
 };
+
+// Get user details
+exports.user_detail = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(
+    req.params.id,
+    "firstName lastName profilePicture bio friends friendRequests"
+  ).exec();
+
+  res.send(user);
+});
+
+// Get friend requests
+exports.user_requests = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.params.id, "friendRequests")
+    .populate({
+      path: "friendRequests",
+      select: "firstName lastName profilePicture",
+    })
+    .exec();
+
+  res.send(user.friendRequests);
+});
+
+// Get friend suggestions
+exports.user_suggestions = asyncHandler(async (req, res, next) => {
+  const allUsers = await User.find(
+    {},
+    "firstName lastName profilePicture friendRequests"
+  ).exec();
+
+  const currentUser = await User.findById(
+    req.params.id,
+    "friends friendRequests"
+  ).exec();
+
+  const userFriends = currentUser.friends;
+  const userRequests = currentUser.friendRequests;
+
+  // Filter sent friend requests
+  const sentRequestsFiltered = allUsers.filter((a) =>
+    a.friendRequests.every(
+      (b) => b._id.toString() !== currentUser._id.toString()
+    )
+  );
+
+  // Filter all friends
+  const friendsFiltered = sentRequestsFiltered.filter((a) =>
+    userFriends.every(
+      (b) =>
+        b._id.toString() !== a._id.toString() &&
+        a._id.toString() !== currentUser._id.toString()
+    )
+  );
+
+  // Filter friend requests
+  const friendSuggestions = friendsFiltered.filter((a) =>
+    userRequests.every((b) => b._id.toString() !== a._id.toString())
+  );
+
+  res.send(friendSuggestions);
+});
+
+// Get user friends
+exports.user_friends = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.params.id, "friends")
+    .populate({ path: "friends", select: "firstName lastName profilePicture" })
+    .exec();
+
+  res.send(user.friends);
+});
+
+// Get user posts
+exports.user_posts = asyncHandler(async (req, res, next) => {
+  const allPosts = await Post.find(
+    { author: req.params.id },
+    "author text likes comments timestamp"
+  )
+    .populate("author", "firstName lastName")
+    .sort({ timestamp: -1 })
+    .exec();
+
+  res.send(allPosts);
+});
+
+// Add friend request
+exports.add_requests = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.params.userId).exec();
+
+  await User.findByIdAndUpdate(req.params.requestId, {
+    $push: { friendRequests: user },
+  });
+
+  res.status(200).json({ message: "success" });
+});
+
+// Add friends
+exports.add_friends = asyncHandler(async (req, res, next) => {
+  // Remove request user from friends request list
+  await User.findByIdAndUpdate(req.params.userId, {
+    $pull: { friendRequests: req.params.requestId },
+  });
+
+  // Add both users to each others friends list
+  await User.findByIdAndUpdate(req.params.userId, {
+    $push: { friends: req.params.requestId },
+  });
+
+  await User.findByIdAndUpdate(req.params.requestId, {
+    $push: { friends: req.params.userId },
+  });
+
+  res.status(200).json({ message: "success" });
+});
 
 // Handle login
 exports.user_login = (req, res, next) => {
@@ -133,27 +247,16 @@ exports.user_signup = [
   }),
 ];
 
-// Display user details
-exports.user_detail = asyncHandler(async (req, res, next) => {
-  const user = await User.find(
-    { _id: req.params.id },
-    "firstName lastName profilePicture bio friends friendRequests"
-  )
-    .populate("friends")
-    .populate("friendRequests")
-    .exec();
-
-  res.send(user);
-});
-
 // Update user profile phot
 exports.user_update_photo = [body("profilePhoto")];
 
 // Update user bio
 exports.user_update_bio = [
-  body("userBio")
+  body("text")
     .trim()
-    .optional({ values: "falsy" })
+    .isLength({ min: 1 })
+    .escape()
+    .withMessage("Bio should not be empty")
     .isLength({ max: 100 })
     .escape()
     .withMessage("Bio should not exceed 100 characters"),
@@ -161,19 +264,37 @@ exports.user_update_bio = [
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
-    const bio = req.body.userBio;
+    const bio = req.body.text;
 
     if (!errors.isEmpty()) {
-      res.send(422).json({ errors: errors.array()[0].msg });
-      return;
+      res.status(422).json({ errors: errors.array()[0].msg });
     } else {
-      const user = await User.findByIdAndUpdate(
-        req.params.id,
-        { $set: { bio: bio } },
-        {}
-      );
+      await User.findByIdAndUpdate(req.params.id, { $set: { bio: bio } }, {});
 
-      res.send(user);
+      res.status(200).json({ message: "success" });
     }
   }),
 ];
+
+// Delete friend requests
+exports.delete_friend_requests = asyncHandler(async (req, res, next) => {
+  await User.findByIdAndUpdate(req.params.userId, {
+    $pull: { friendRequests: req.params.requestId },
+  });
+
+  res.status(200).json({ message: "success" });
+});
+
+// Delete friends
+exports.delete_friends = asyncHandler(async (req, res, next) => {
+  // Delete both users from each others friends list
+  await User.findByIdAndUpdate(req.params.userId, {
+    $pull: { friends: req.params.requestId },
+  });
+
+  await User.findByIdAndUpdate(req.params.requestId, {
+    $pull: { friends: req.params.userId },
+  });
+
+  res.status(200).json({ message: "success" });
+});
