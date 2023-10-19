@@ -40,7 +40,6 @@ exports.comment_create = [
         "author post text timestamp"
       )
         .populate({ path: "author", select: "firstName lastName" })
-        .sort({ timestamp: -1 })
         .exec();
 
       res.send(allComments);
@@ -56,13 +55,14 @@ exports.comment_delete = asyncHandler(async (req, res, next) => {
     $pull: { comments: comment._id },
   });
 
+  await Comment.deleteOne({ post: req.params.postId });
+
   // Fetch all comments after save
   const allComments = await Comment.find(
     { post: req.params.postId },
     "author post text timestamp"
   )
     .populate({ path: "author", select: "firstName lastName" })
-    .sort({ timestamp: -1 })
     .exec();
 
   res.send(allComments);

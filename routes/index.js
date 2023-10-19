@@ -13,6 +13,9 @@ router.get("/isUserAuth", user_controller.user_auth);
 // POST request for user login
 router.post("/login", user_controller.user_login);
 
+// POST request for guest login
+router.post("/login/guest", user_controller.guest_login);
+
 // POST request for user sign in
 router.post("/signup", user_controller.user_signup);
 

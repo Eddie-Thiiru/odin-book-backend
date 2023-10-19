@@ -36,7 +36,10 @@ passport.use(
 
     async (email, password, done) => {
       try {
-        const user = await User.findOne({ email: email });
+        const user = await User.findOne(
+          { email: email },
+          "firstName lastName email profilePicture password"
+        );
 
         if (!user) {
           return done(null, false, {
@@ -70,7 +73,10 @@ passport.use(
 
     async (jwt_payload, done) => {
       try {
-        const user = await User.findById(jwt_payload.user._id);
+        const user = await User.findById(
+          jwt_payload._id,
+          "firstName lastName email password"
+        );
 
         if (user) {
           return done(null, user);
