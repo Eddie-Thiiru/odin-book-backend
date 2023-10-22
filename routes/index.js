@@ -88,7 +88,7 @@ router.post("/post/:id/comments", comment_controller.comment_create);
 
 // DELETE request for comment
 router.delete(
-  "/post/:postId/comments/:userId",
+  "/post/:postId/comments/:commentId",
   comment_controller.comment_delete
 );
 
