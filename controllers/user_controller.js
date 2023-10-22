@@ -74,7 +74,6 @@ exports.guest_login = (req, res, next) => {
         _id: user._id,
         firstName: user.firstName,
         lastName: user.lastName,
-        profilePicture: user.profilePicture,
         email: user.email,
       };
       // generate a signed web token with user object
@@ -89,6 +88,7 @@ exports.guest_login = (req, res, next) => {
         user: {
           firstName: user.firstName,
           lastName: user.lastName,
+          profilePicture: user.profilePicture,
           id: user._id,
         },
       });
@@ -99,7 +99,6 @@ exports.guest_login = (req, res, next) => {
 // Handle auth
 exports.user_auth = (req, res, next) => {
   passport.authenticate("jwt", { session: false }, (err, user, info) => {
-    console.log(err, user);
     if (err || !user) {
       return res.status(401).json({ message: info.message });
     }
