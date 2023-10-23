@@ -321,8 +321,10 @@ exports.user_update_photo = (req, res, next) => {
 
     const user = await User.findByIdAndUpdate(
       req.params.id,
-      { $set: { profilePicture: req.file.buffer } },
-      {}
+      {
+        $set: { profilePicture: req.file.buffer },
+      },
+      { new: true }
     );
 
     const userContent = {
