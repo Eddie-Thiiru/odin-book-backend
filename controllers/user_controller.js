@@ -319,13 +319,20 @@ exports.user_update_photo = (req, res, next) => {
       return res.status(403).json({ message: "forbidden" });
     }
 
-    await User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
       req.params.id,
       { $set: { profilePicture: req.file.buffer } },
       {}
     );
 
-    res.status(200).json({ message: "success" });
+    const userContent = {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      profilePicture: user.profilePicture,
+      id: user._id,
+    };
+
+    res.send(userContent);
   });
 };
 
